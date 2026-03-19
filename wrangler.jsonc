@@ -1,0 +1,14 @@
+{
+  "compatibility_date": "2026-03-19",
+  "compatibility_flags": [
+    "python_workers"
+  ],
+  "main": "src/worker.py",
+  "name": "learnpilot-ai",
+  "ai": {
+    "binding": "AI"
+  },
+  "vars": {
+    "ENVIRONMENT": "development"
+  }
+}
