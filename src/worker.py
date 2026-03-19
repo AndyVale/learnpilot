@@ -9,56 +9,122 @@
 # on Cloudflare's global edge network, providing low-latency responses.
 #
 # Endpoints:
-#   POST /ai/chat       – continue a tutoring conversation
-#   POST /ai/explain    – explain a concept at the learner's level
-#   POST /ai/practice   – generate a practice question
-#   POST /ai/evaluate   – evaluate a learner's answer
-#   POST /ai/path       – generate a personalised learning path
-#   POST /ai/progress   – produce personalised progress insights
-#   GET  /health        – liveness check
-
+#   POST /ai/chat       - continue a tutoring conversation
+#   POST /ai/explain    - explain a concept at the learner's level
+#   POST /ai/practice   - generate a practice question
+#   POST /ai/evaluate   - evaluate a learner's answer
+#   POST /ai/path       - generate a personalised learning path
+#   POST /ai/progress   - produce personalised progress insights
+#   GET  /health        - liveness check
 import json
+from js_conversion import to_js, console
+from workers import Response, WorkerEntrypoint
 
+class Default(WorkerEntrypoint):
+    """
+    A Cloudflare Python Worker that exposes an AI tutoring API backed.
+    It inherits from WorkerEntrypoint and implements the fetch method 
+    along with helper methods for each endpoint.
+    """
+    async def fetch(self, request):
+        """Entry point for all incoming HTTP requests."""
+        url = request.url
+        method = request.method
 
-async def on_fetch(request, env):
-    """Entry point for all incoming HTTP requests."""
-    url = request.url
-    method = request.method
+        # CORS preflight
+        if method == "OPTIONS":
+            return _cors_response("", 204)
 
-    # CORS preflight
-    if method == "OPTIONS":
-        return _cors_response("", 204)
+        # Route dispatch
+        # if "/ai/chat" in url and method == "POST":
+        #     return await _handle_chat(request, env)
 
-    # Route dispatch
-    if "/ai/chat" in url and method == "POST":
-        return await _handle_chat(request, env)
+        if "/ai/explain" in url and method == "POST":
+            return await self.handle_explain(request)
 
-    if "/ai/explain" in url and method == "POST":
-        return await _handle_explain(request, env)
+        # if "/ai/practice" in url and method == "POST":
+        #     return await _handle_practice(request, env)
 
-    if "/ai/practice" in url and method == "POST":
-        return await _handle_practice(request, env)
+        # if "/ai/evaluate" in url and method == "POST":
+        #     return await _handle_evaluate(request, env)
 
-    if "/ai/evaluate" in url and method == "POST":
-        return await _handle_evaluate(request, env)
+        # if "/ai/path" in url and method == "POST":
+        #     return await _handle_generate_path(request, env)
 
-    if "/ai/path" in url and method == "POST":
-        return await _handle_generate_path(request, env)
+        # if "/ai/progress" in url and method == "POST":
+        #     return await _handle_progress_insights(request, env)
 
-    if "/ai/progress" in url and method == "POST":
-        return await _handle_progress_insights(request, env)
+        # if "/ai/adapt" in url and method == "POST":
+        #     return await _handle_adapt_difficulty(request, env)
 
-    if "/ai/adapt" in url and method == "POST":
-        return await _handle_adapt_difficulty(request, env)
+        # if "/ai/summary" in url and method == "POST":
+        #     return await _handle_session_summary(request, env)
 
-    if "/ai/summary" in url and method == "POST":
-        return await _handle_session_summary(request, env)
+        if "/health" in url:
+            return _cors_response(json.dumps({"status": "ok", "service": "learnpilot-ai"}), 200)
 
-    if "/health" in url:
-        return _cors_response(json.dumps({"status": "ok", "service": "learnpilot-ai"}), 200)
+        return _cors_response(json.dumps({"error": "Not found"}), 404)
 
-    return _cors_response(json.dumps({"error": "Not found"}), 404)
+    async def handle_explain(self, request):
+        """
+        Explain a concept at the learner's level.
 
+        Request body:
+            {
+            "concept": "recursion",
+            "skill_level": "beginner",
+            "learning_style": "visual",
+            "context": "…"   // optional
+            }
+        """
+        try:
+            body = await request.json()
+        except Exception:
+            return _error("Invalid JSON", 400)
+
+        concept = body.get("concept", "").strip()
+        if not concept:
+            return _error("concept is required", 400)
+
+        skill_level = body.get("skill_level", "beginner")
+        learning_style = body.get("learning_style", "visual")
+        context = body.get("context", "")
+
+        style_hints = {
+            "visual": "Use text-described diagrams and visual metaphors.",
+            "auditory": "Explain conversationally as if speaking aloud.",
+            "reading": "Use numbered lists and clear definitions.",
+            "kinesthetic": "Emphasise hands-on examples and step-by-step tasks.",
+        }
+        style_hint = style_hints.get(learning_style, "")
+        context_section = f"\n\nLesson context:\n{context}" if context else ""
+
+        prompt = (
+            f"Explain the following concept to a {skill_level}-level learner.\n"
+            f"Learning style: {learning_style}. {style_hint}\n\n"
+            f"Concept: {concept}{context_section}\n\n"
+            "Structure your response as:\n"
+            "1. **Core Explanation** (2-4 sentences)\n"
+            "2. **Analogy** - a memorable real-world comparison\n"
+            "3. **Key Points** - 3-5 bullet points\n"
+            "4. **Quick Example** - a short, concrete illustration"
+        )
+
+        result = await self.env.AI.run(
+            "@cf/meta/llama-3.1-8b-instruct",
+            to_js(
+                {
+                    "messages": [
+                        {"role": "system", "content": _tutor_system_prompt()},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "max_tokens": 1024,
+                }
+            )
+        )
+        data = result.to_py() # convert to python object
+        answer = data["response"] # get the response string
+        return _cors_response(answer, 200)
 
 # ---------------------------------------------------------------------------
 # Handlers
@@ -96,65 +162,6 @@ async def _handle_chat(request, env):
     )
     response_text = result.get("response", "") if isinstance(result, dict) else ""
     return _cors_response(json.dumps({"response": response_text}), 200)
-
-
-async def _handle_explain(request, env):
-    """
-    Explain a concept at the learner's level.
-
-    Request body:
-        {
-          "concept": "recursion",
-          "skill_level": "beginner",
-          "learning_style": "visual",
-          "context": "…"   // optional
-        }
-    """
-    try:
-        body = await request.json()
-    except Exception:
-        return _error("Invalid JSON", 400)
-
-    concept = body.get("concept", "").strip()
-    if not concept:
-        return _error("concept is required", 400)
-
-    skill_level = body.get("skill_level", "beginner")
-    learning_style = body.get("learning_style", "visual")
-    context = body.get("context", "")
-
-    style_hints = {
-        "visual": "Use text-described diagrams and visual metaphors.",
-        "auditory": "Explain conversationally as if speaking aloud.",
-        "reading": "Use numbered lists and clear definitions.",
-        "kinesthetic": "Emphasise hands-on examples and step-by-step tasks.",
-    }
-    style_hint = style_hints.get(learning_style, "")
-    context_section = f"\n\nLesson context:\n{context}" if context else ""
-
-    prompt = (
-        f"Explain the following concept to a {skill_level}-level learner.\n"
-        f"Learning style: {learning_style}. {style_hint}\n\n"
-        f"Concept: {concept}{context_section}\n\n"
-        "Structure your response as:\n"
-        "1. **Core Explanation** (2–4 sentences)\n"
-        "2. **Analogy** – a memorable real-world comparison\n"
-        "3. **Key Points** – 3–5 bullet points\n"
-        "4. **Quick Example** – a short, concrete illustration"
-    )
-
-    result = await env.AI.run(
-        "@cf/meta/llama-3.1-8b-instruct",
-        {
-            "messages": [
-                {"role": "system", "content": _tutor_system_prompt()},
-                {"role": "user", "content": prompt},
-            ],
-            "max_tokens": 1024,
-        },
-    )
-    text = result.get("response", "") if isinstance(result, dict) else ""
-    return _cors_response(json.dumps({"explanation": text}), 200)
 
 
 async def _handle_practice(request, env):
@@ -358,7 +365,7 @@ async def _handle_progress_insights(request, env):
     prompt = (
         f"Analyse {learner_name}'s learning progress in \"{topic}\":\n\n"
         f"{json.dumps(progress_data, indent=2)}\n\n"
-        "Write a concise progress report (4–6 sentences) that:\n"
+        "Write a concise progress report (4-6 sentences) that:\n"
         "1. Summarises overall performance.\n"
         "2. Identifies strengths.\n"
         "3. Pinpoints areas needing improvement.\n"
@@ -498,10 +505,10 @@ async def _handle_session_summary(request, env):
     prompt = (
         f"A tutoring session on \"{lesson_title}\" just ended.\n"
         f"Conversation:\n{dialogue}\n\n"
-        "Write a concise session summary (3–5 sentences) that:\n"
+        "Write a concise session summary (3-5 sentences) that:\n"
         "1. Highlights the key concepts covered.\n"
         "2. Notes any misconceptions that were corrected.\n"
-        "3. Suggests 1–2 concrete next steps for the learner."
+        "3. Suggests 1-2 concrete next steps for the learner."
     )
 
     result = await env.AI.run(
