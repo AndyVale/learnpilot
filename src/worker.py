@@ -18,7 +18,10 @@
 #   GET  /health        - liveness check
 import json
 from js_conversion import to_js, console
+from urllib.parse import urlparse
 from workers import Response, WorkerEntrypoint
+
+MODEL = "@cf/meta/llama-3.1-8b-instruct"
 
 class Default(WorkerEntrypoint):
     """
@@ -28,7 +31,8 @@ class Default(WorkerEntrypoint):
     """
     async def fetch(self, request):
         """Entry point for all incoming HTTP requests."""
-        url = request.url
+        parsed_url = urlparse(request.url)
+        path = parsed_url.path
         method = request.method
 
         # CORS preflight
@@ -36,31 +40,31 @@ class Default(WorkerEntrypoint):
             return _cors_response(None, 204)
 
         # Route dispatch
-        if "/ai/chat" in url and method == "POST":
+        if "/ai/chat" == path and method == "POST":
             return await self.handle_chat(request)
 
-        if "/ai/explain" in url and method == "POST":
+        if "/ai/explain" == path and method == "POST":
             return await self.handle_explain(request)
 
-        if "/ai/practice" in url and method == "POST":
+        if "/ai/practice" == path and method == "POST":
             return await self.handle_practice(request)
 
-        if "/ai/evaluate" in url and method == "POST":
+        if "/ai/evaluate" == path and method == "POST":
             return await self.handle_evaluate(request)
 
-        if "/ai/path" in url and method == "POST":
+        if "/ai/path" == path and method == "POST":
             return await self.handle_generate_path(request)
 
-        if "/ai/progress" in url and method == "POST":
+        if "/ai/progress" == path and method == "POST":
             return await self.handle_progress_insights(request)
 
-        if "/ai/adapt" in url and method == "POST":
+        if "/ai/adapt" == path and method == "POST":
             return await self.handle_adapt_difficulty(request)
 
-        if "/ai/summary" in url and method == "POST":
+        if "/ai/summary" == path and method == "POST":
             return await self.handle_session_summary(request)
 
-        if "/health" in url:
+        if "/health" == path:
             return _cors_response(json.dumps({"status": "ok", "service": "learnpilot-ai"}), 200)
 
         return _cors_response(json.dumps({"error": "Not found"}), 404)
@@ -111,7 +115,7 @@ class Default(WorkerEntrypoint):
         )
 
         result = await self.env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct",
+            MODEL,
             to_js(
                 {
                     "messages": [
@@ -153,7 +157,7 @@ class Default(WorkerEntrypoint):
         full_messages = [{"role": "system", "content": system_prompt}] + messages[-10:]
 
         result = await self.env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct",
+            MODEL,
             to_js({"messages": full_messages, "max_tokens": max_tokens}),
         )
         data = result.to_py()
@@ -192,7 +196,7 @@ class Default(WorkerEntrypoint):
         )
 
         result = await self.env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct",
+            MODEL,
             to_js({
                 "messages": [
                     {"role": "system", "content": _tutor_system_prompt()},
@@ -244,7 +248,7 @@ class Default(WorkerEntrypoint):
         )
 
         result = await self.env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct",
+            MODEL,
             to_js({
                 "messages": [
                     {"role": "system", "content": _tutor_system_prompt()},
@@ -303,7 +307,7 @@ class Default(WorkerEntrypoint):
         )
 
         result = await self.env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct",
+            MODEL,
             to_js({
                 "messages": [
                     {"role": "system", "content": _curriculum_system_prompt()},
@@ -369,7 +373,7 @@ class Default(WorkerEntrypoint):
         )
 
         result = await self.env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct",
+            MODEL,
             to_js({
                 "messages": [
                     {"role": "system", "content": _curriculum_system_prompt()},
@@ -430,7 +434,7 @@ class Default(WorkerEntrypoint):
         )
 
         result = await self.env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct",
+            MODEL,
             to_js({
                 "messages": [
                     {"role": "system", "content": _curriculum_system_prompt()},
@@ -508,7 +512,7 @@ class Default(WorkerEntrypoint):
         )
 
         result = await self.env.AI.run(
-            "@cf/meta/llama-3.1-8b-instruct",
+            MODEL,
             to_js({
                 "messages": [
                     {"role": "system", "content": _tutor_system_prompt()},
