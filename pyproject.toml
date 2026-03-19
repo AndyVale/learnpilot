@@ -1,4 +1,11 @@
-name = "learnpilot-ai"
+[project]
+name = "learnpilot"
+version = "0.1.0"
 main = "src/worker.py"
 compatibility_date = "2026-03-19"
 compatibility_flags = ["python_workers"]
+requires-python = ">=3.13"
+dependencies = [
+    "pytest",
+    "requests",
+]
