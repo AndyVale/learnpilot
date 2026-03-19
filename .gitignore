@@ -20,6 +20,10 @@ htmlcov/
 # Environment
 .env
 
+# Pywrangler
+python_modules
+.venv-workers
+
 # Editor
 .idea/
 .vscode/
