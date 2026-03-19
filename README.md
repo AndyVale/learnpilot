@@ -38,8 +38,6 @@ No server infrastructure, no databases, no external dependencies.
 | POST   | `/ai/summary`   | Summarise a completed tutoring session                 |
 | GET    | `/health`       | Liveness check                                         |
 
-All endpoints return JSON and support CORS.
-
 ---
 
 ## Request / Response Examples
@@ -56,9 +54,7 @@ All endpoints return JSON and support CORS.
 }
 
 // Response
-{
-  "explanation": "1. **Core Explanation** – Recursion is when a function calls itself…"
-}
+"1. **Core Explanation** – Recursion is when a function calls itself…"
 ```
 
 ### `POST /ai/evaluate`
@@ -127,12 +123,13 @@ All endpoints return JSON and support CORS.
 ```
 learnpilot/
 ├── src/
-│   └── worker.py          # Cloudflare Python Worker (all logic lives here)
+│   ├── worker.py          # Cloudflare Python Worker (Main entry point)
+│   └── js_conversion.py   # JavaScript types conversion utilities
 ├── tests/
-│   └── test_worker.py     # Unit tests (pytest, no Cloudflare runtime needed)
-├── wrangler.toml          # Cloudflare Workers deployment config
-├── requirements-dev.txt   # Dev/test dependencies (pytest only)
-├── .env.example           # Example environment variables for Wrangler CLI
+│   └── test_worker.py     # End-to-end and unit tests (pytest)
+├── wrangler.jsonc         # Cloudflare Workers configuration
+├── pyproject.toml         # Python project configuration (uv)
+├── uv.lock                # Locked dependencies
 ├── LICENSE
 └── README.md
 ```
@@ -143,20 +140,18 @@ learnpilot/
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) ≥ 18 (for the Wrangler CLI)
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- [Node.js](https://nodejs.org/) ≥ 18
 - A [Cloudflare account](https://dash.cloudflare.com/sign-up) with Workers AI enabled
 
 ### Deploy
 
 ```bash
-# Install Wrangler CLI
-npm install -g wrangler
-
 # Authenticate with Cloudflare
-wrangler login
+npx wrangler login
 
 # Deploy the worker to the edge
-npx wrangler deploy
+uv run pywrangler deploy
 ```
 
 Wrangler will print the live URL, e.g.
@@ -165,7 +160,7 @@ Wrangler will print the live URL, e.g.
 ### Local Development
 
 ```bash
-npx wrangler dev
+uv run pywrangler dev
 ```
 
 The worker starts on `http://localhost:8787`. All AI calls are proxied to
@@ -175,16 +170,11 @@ Cloudflare's remote AI service automatically during development.
 
 ## Running Tests
 
-The tests use only the Python standard library and `pytest`. No Cloudflare
-runtime is required – a minimal `Response` shim is injected before importing
-`worker.py`.
+The tests use `pytest` and `requests` to verify the worker's behavior against a running instance (local or remote).
 
 ```bash
-# Install test dependencies
-pip install -r requirements-dev.txt
-
 # Run tests
-pytest tests/ -v
+uv run pytest tests/ -v
 ```
 
 ---
@@ -199,6 +189,9 @@ into the deployed worker.
 |---------------------------|------------------------------------------|
 | `CLOUDFLARE_ACCOUNT_ID`   | Your Cloudflare account ID               |
 | `CLOUDFLARE_API_TOKEN`    | API token with Workers AI permission     |
+
+
+Or you can simple login with `npx wrangler login` in your terminal
 
 ---
 
