@@ -127,8 +127,8 @@ class Default(WorkerEntrypoint):
             )
         )
         data = result.to_py() # convert to python object
-        answer = data.get("response", "") # get the response string
-        return _cors_response(answer, 200)
+        explanation = data.get("response", "") # get the response string
+        return _cors_response(json.dumps({"explanation": explanation}), 200)
 
     async def handle_chat(self, request):
         """
@@ -319,17 +319,11 @@ class Default(WorkerEntrypoint):
         data = result.to_py()
         raw = data.get("response", "")
 
-        # Extract JSON from the response
-        start = raw.find("{")
-        end = raw.rfind("}")
-        if start != -1 and end > start:
-            try:
-                path_data = json.loads(raw[start : end + 1])
-                return _cors_response(json.dumps(path_data), 200)
-            except (json.JSONDecodeError, ValueError):
-                pass
-
-        return _cors_response(json.dumps({"ordered_lesson_ids": [], "rationale": raw}), 200)
+        try:
+            path_data = json.loads(raw)
+            return _cors_response(json.dumps(path_data), 200)
+        except (json.JSONDecodeError, ValueError):
+            return _cors_response(json.dumps({"ordered_lesson_ids": [], "rationale": raw}), 200)
 
     async def handle_progress_insights(self, request):
         """
@@ -446,25 +440,20 @@ class Default(WorkerEntrypoint):
         data = result.to_py()
         raw = data.get("response", "")
 
-        start = raw.find("{")
-        end = raw.rfind("}")
-        if start != -1 and end > start:
-            try:
-                adapt_data = json.loads(raw[start : end + 1])
-                return _cors_response(json.dumps(adapt_data), 200)
-            except (json.JSONDecodeError, ValueError):
-                pass
-
-        return _cors_response(
-            json.dumps(
-                {
-                    "new_difficulty": current_difficulty,
-                    "action": "maintain",
-                    "reasoning": raw,
-                }
-            ),
-            200,
-        )
+        try:
+            adapt_data = json.loads(raw)
+            return _cors_response(json.dumps(adapt_data), 200)
+        except (json.JSONDecodeError, ValueError):
+            return _cors_response(
+                json.dumps(
+                    {
+                        "new_difficulty": current_difficulty,
+                        "action": "maintain",
+                        "reasoning": raw,
+                    }
+                ),
+                200,
+            )
 
     async def handle_session_summary(self, request):
         """

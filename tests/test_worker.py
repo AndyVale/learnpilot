@@ -44,8 +44,9 @@ def test_explain_valid(api_url):
     }
     response = requests.post(f"{api_url}/ai/explain", json=payload, timeout=TIMEOUT)
     assert response.status_code == 200
-    # The endpoint returns a raw string response body, not JSON
-    assert len(response.text) > 0
+    data = response.json()
+    assert "explanation" in data
+    assert len(data["explanation"]) > 0
 
 
 def test_explain_missing_concept(api_url):
