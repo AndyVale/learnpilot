@@ -17,16 +17,27 @@
 #   POST /ai/progress   - produce personalised progress insights
 #   GET  /health        - liveness check
 import json
-from js_conversion import to_js, console
+from js import Object, console
+from pyodide.ffi import to_js as _to_js
 from urllib.parse import urlparse
 from workers import Response, WorkerEntrypoint
+
+# to_js converts between Python dictionaries and JavaScript Objects
+def to_js(obj):
+    """
+    Function to convert python objects to JavaScript objects.
+    This is required for the Python Workers to work with JavaScript.
+    From https://developers.cloudflare.com/workers/languages/python/ffi/
+    """
+    return _to_js(obj, dict_converter=Object.fromEntries)
+
 
 MODEL = "@cf/meta/llama-3.1-8b-instruct"
 
 class Default(WorkerEntrypoint):
     """
     A Cloudflare Python Worker that exposes an AI tutoring API backed.
-    It inherits from WorkerEntrypoint and implements the fetch method 
+    It inherits from WorkerEntrypoint and implements the fetch method
     along with helper methods for each endpoint.
     """
     async def fetch(self, request):
