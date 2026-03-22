@@ -54,7 +54,9 @@ No server infrastructure, no databases, no external dependencies.
 }
 
 // Response
-"1. **Core Explanation** – Recursion is when a function calls itself…"
+{
+  "explanation": "1. **Core Explanation** – Recursion is when a function calls itself…"
+}
 ```
 
 ### `POST /ai/evaluate`
@@ -126,8 +128,8 @@ learnpilot/
 │   ├── worker.py          # Cloudflare Python Worker (Main entry point)
 │   └── js_conversion.py   # JavaScript types conversion utilities
 ├── tests/
-│   └── test_worker.py     # End-to-end and unit tests (pytest)
-├── wrangler.jsonc         # Cloudflare Workers configuration
+│   └── test_worker.py     # Unit tests (pytest)
+├── wrangler.toml          # Cloudflare Workers configuration
 ├── pyproject.toml         # Python project configuration (uv)
 ├── uv.lock                # Locked dependencies
 ├── LICENSE
@@ -191,7 +193,7 @@ into the deployed worker.
 | `CLOUDFLARE_API_TOKEN`    | API token with Workers AI permission     |
 
 
-Or you can simple login with `pywrangler login` in your terminal as said above.
+Or you can simply log in with `pywrangler login` in your terminal as said above.
 
 ---
 
