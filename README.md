@@ -148,7 +148,7 @@ learnpilot/
 
 ```bash
 # Authenticate with Cloudflare
-npx wrangler login
+pywrangler login
 
 # Deploy the worker to the edge
 uv run pywrangler deploy
@@ -191,7 +191,7 @@ into the deployed worker.
 | `CLOUDFLARE_API_TOKEN`    | API token with Workers AI permission     |
 
 
-Or you can simple login with `npx wrangler login` in your terminal
+Or you can simple login with `pywrangler login` in your terminal as said above.
 
 ---
 

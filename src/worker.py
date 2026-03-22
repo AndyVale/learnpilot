@@ -3,7 +3,7 @@
 # A Cloudflare Python Worker that exposes an AI tutoring API backed
 # by Cloudflare Workers AI. Deploy with:
 #
-#   npx wrangler deploy
+#   uv run pywrangler deploy
 #
 # The worker uses the Workers AI binding (env.AI) to run inference
 # on Cloudflare's global edge network, providing low-latency responses.
