@@ -17,7 +17,7 @@
 #   POST /ai/progress   - produce personalised progress insights
 #   GET  /health        - liveness check
 import json
-from js import Object, console
+from js import Object
 from pyodide.ffi import to_js as _to_js
 from urllib.parse import urlparse
 from workers import Response, WorkerEntrypoint
@@ -571,7 +571,7 @@ def _parse_evaluation(raw: str) -> dict:
     return result
 
 
-def _cors_response(body: str, status: int):
+def _cors_response(body: str|None, status: int):
     # TODO: handle this in a better way
     headers = {
         "Content-Type": "application/json",
