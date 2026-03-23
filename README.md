@@ -125,8 +125,7 @@ No server infrastructure, no databases, no external dependencies.
 ```
 learnpilot/
 ├── src/
-│   ├── worker.py          # Cloudflare Python Worker (Main entry point)
-│   └── js_conversion.py   # JavaScript types conversion utilities
+│   └── worker.py          # Cloudflare Python Worker (Main entry point)
 ├── tests/
 │   └── test_worker.py     # Unit tests (pytest)
 ├── wrangler.toml          # Cloudflare Workers configuration

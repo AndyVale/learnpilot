@@ -99,16 +99,19 @@ wheels = [
 name = "learnpilot"
 version = "0.1.0"
 source = { virtual = "." }
-dependencies = [
+
+[package.optional-dependencies]
+test = [
     { name = "pytest" },
     { name = "requests" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "pytest" },
-    { name = "requests" },
+    { name = "pytest", marker = "extra == 'test'" },
+    { name = "requests", marker = "extra == 'test'" },
 ]
+provides-extras = ["test"]
 
 [[package]]
 name = "packaging"
