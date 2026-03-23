@@ -5,6 +5,3 @@ name = "learnpilot-ai"
 
 [ai]
 binding = "AI"
-
-[vars]
-ENVIRONMENT = "development"

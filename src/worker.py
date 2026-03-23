@@ -9,13 +9,13 @@
 # on Cloudflare's global edge network, providing low-latency responses.
 #
 # Endpoints:
-#   POST /ai/chat       - continue a tutoring conversation
-#   POST /ai/explain    - explain a concept at the learner's level
-#   POST /ai/practice   - generate a practice question
-#   POST /ai/evaluate   - evaluate a learner's answer
-#   POST /ai/path       - generate a personalised learning path
-#   POST /ai/progress   - produce personalised progress insights
-#   GET  /health        - liveness check
+#   POST /ai/chat       – continue a tutoring conversation
+#   POST /ai/explain    – explain a concept at the learner's level
+#   POST /ai/practice   – generate a practice question
+#   POST /ai/evaluate   – evaluate a learner's answer
+#   POST /ai/path       – generate a personalised learning path
+#   POST /ai/progress   – produce personalised progress insights
+#   GET  /health        – liveness check
 import json
 from js import Object
 from pyodide.ffi import to_js as _to_js
