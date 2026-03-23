@@ -27,6 +27,18 @@ def test_cors_options(api_url):
     assert response.headers.get("Access-Control-Allow-Origin") == "*"
 
 
+def test_invalid_json_body(api_url):
+    """Test invalid JSON body."""
+    response = requests.post(
+        f"{api_url}/ai/explain",
+        data="not valid json",
+        headers={"Content-Type": "application/json"},
+        timeout=TIMEOUT
+    )
+    assert response.status_code == 400
+    assert response.json().get("error") == "Invalid JSON"
+
+
 def test_not_found(api_url):
     """Test unknown endpoint returns 404."""
     response = requests.get(f"{api_url}/unknown-endpoint", timeout=TIMEOUT)
@@ -200,6 +212,12 @@ def test_adapt_missing_topic(api_url):
     assert response.status_code == 400
     assert response.json().get("error") == "topic is required"
 
+
+def test_adapt_empty_scores(api_url):
+    """Test /ai/adapt endpoint with empty scores."""
+    payload = {"topic": "Python", "current_difficulty": "beginner", "recent_scores": []}
+    response = requests.post(f"{api_url}/ai/adapt", json=payload, timeout=TIMEOUT)
+    assert response.status_code == 400
 
 def test_summary_valid(api_url):
     """Test /ai/summary endpoint for summarizing session."""
