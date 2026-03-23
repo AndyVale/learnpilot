@@ -51,31 +51,31 @@ class Default(WorkerEntrypoint):
             return _cors_response(None, 204)
 
         # Route dispatch
-        if "/ai/chat" == path and method == "POST":
+        if path == "/ai/chat" and method == "POST":
             return await self.handle_chat(request)
 
-        if "/ai/explain" == path and method == "POST":
+        if path == "/ai/explain" and method == "POST":
             return await self.handle_explain(request)
 
-        if "/ai/practice" == path and method == "POST":
+        if path == "/ai/practice" and method == "POST":
             return await self.handle_practice(request)
 
-        if "/ai/evaluate" == path and method == "POST":
+        if path == "/ai/evaluate" and method == "POST":
             return await self.handle_evaluate(request)
 
-        if "/ai/path" == path and method == "POST":
+        if path == "/ai/path" and method == "POST":
             return await self.handle_generate_path(request)
 
-        if "/ai/progress" == path and method == "POST":
+        if path == "/ai/progress" and method == "POST":
             return await self.handle_progress_insights(request)
 
-        if "/ai/adapt" == path and method == "POST":
+        if path == "/ai/adapt" and method == "POST":
             return await self.handle_adapt_difficulty(request)
 
-        if "/ai/summary" == path and method == "POST":
+        if path == "/ai/summary" and method == "POST":
             return await self.handle_session_summary(request)
 
-        if "/health" == path:
+        if path == "/health":
             return _cors_response(json.dumps({"status": "ok", "service": "learnpilot-ai"}), 200)
 
         return _cors_response(json.dumps({"error": "Not found"}), 404)
@@ -159,7 +159,10 @@ class Default(WorkerEntrypoint):
 
         messages = body.get("messages", [])
         lesson_context = body.get("lesson_context", "")
-        max_tokens = int(body.get("max_tokens", 1024))
+        try:
+            max_tokens = int(body.get("max_tokens", 1024))
+        except (ValueError, TypeError):
+            return _error("max_tokens must be a valid integer", 400)
 
         if not messages:
             return _error("messages is required", 400)
@@ -571,7 +574,7 @@ def _parse_evaluation(raw: str) -> dict:
     return result
 
 
-def _cors_response(body: str|None, status: int):
+def _cors_response(body: str|None, status: int) -> Response:
     # TODO: handle this in a better way
     headers = {
         "Content-Type": "application/json",

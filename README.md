@@ -149,7 +149,7 @@ learnpilot/
 
 ```bash
 # Authenticate with Cloudflare
-pywrangler login
+uv run pywrangler login
 
 # Deploy the worker to the edge
 uv run pywrangler deploy
